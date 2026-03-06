@@ -40,7 +40,6 @@
         letter-spacing: 1px;
       }
 
-      /* Bagian Identitas Statis */
       .identity-static {
         margin-bottom: 20px;
         padding: 15px;
@@ -189,14 +188,19 @@
 
       /* --- CSS KHUSUS UNTUK PRINT (PDF/KERTAS) --- */
       @media print {
+        @page {
+          margin: 1cm;
+        }
         body {
           background-color: white;
           padding: 0;
+          margin: 0;
         }
         .container {
           box-shadow: none;
           padding: 0;
           max-width: 100%;
+          margin: 0;
         }
         .no-print,
         .controls {
@@ -209,10 +213,33 @@
           margin-bottom: 15px;
           background-color: transparent;
         }
+        .summary-box {
+          page-break-inside: avoid;
+        }
+
+        /* ATURAN PEMOTONGAN HALAMAN TABEL */
+        table {
+          page-break-before: always; /* Memaksa SELURUH tabel untuk selalu dimulai di halaman baru */
+          page-break-inside: auto;
+          border-collapse: collapse;
+        }
+        tr {
+          page-break-inside: avoid;
+          page-break-after: auto;
+        }
+        thead {
+          display: table-header-group;
+        }
+        tfoot {
+          display: table-footer-group;
+        }
+
         th {
           background-color: #eee !important;
           color: #000 !important;
           border: 1px solid #ccc;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
         }
         td {
           border: 1px solid #ccc;
@@ -330,7 +357,6 @@
         "Sabtu",
       ];
 
-      // DAFTAR TANGGAL MERAH / LIBUR INTERNAL (Format: YYYY-MM-DD)
       const tanggalLiburKhusus = [
         "2025-01-01",
         "2025-03-31",
@@ -361,8 +387,7 @@
       const plainTextReason =
         "1. Sistem absensi sering lambat atau sulit diakses saat jam pulang.\n2. Beberapa kali pekerjaan selesai melebihi jam kerja sampai monitor absensi mati.\n3. Pemahaman umum absensi masuk menjadi prioritas pencatatan kehadiran.\n4. Periode sebelumnya belum diberlakukan denda untuk absensi pulang.\n5. Sehingga terbentuk kebiasaan bahwa yang terpenting adalah absensi masuk, dan absensi pulang sering tidak dilakukan meskipun pekerjaan tetap diselesaikan sampai akhir shift.\n\nDampaknya: Pada beberapa kesempatan absensi pulang banyak yang tidak dilakukan meskipun pekerjaan tetap diselesaikan sampai akhir shift.\n\nTimbul kebiasaan buruk:\n- Lupa absen\n- Malas absen\n- Lupa dan malas absen";
 
-      // BATAS AKHIR REPORT (3 Maret 2026)
-      const reportEndDate = new Date(2026, 2, 3); // Bulan 2 adalah Maret (karena array bulan dimulai dari 0)
+      const reportEndDate = new Date(2026, 2, 3);
 
       function checkExcelLibrary() {
         if (typeof XLSX === "undefined") {
@@ -396,7 +421,7 @@
         ]);
         data.push(["2. Hari Libur Nasional."]);
         data.push([
-          "3. Libur Internal dari pemindahan hari libur nasional ke libur internal (contoh: libur nasional dipindah pada libur hari terjepit pada hari Sabtu jika Jumat libur).",
+          "3. Libur Internal dari pemindahan hari libur nasional ke libur internal.",
         ]);
         data.push(["4. Dan libur-libur lainnya."]);
         data.push([]);
@@ -436,7 +461,6 @@
         for (let day = 1; day <= daysInMonth; day++) {
           const currentDate = new Date(year, selectedMonth, day);
 
-          // HENTIKAN JIKA TANGGAL MELEBIHI 3 MARET 2026
           if (currentDate > reportEndDate) {
             break;
           }
@@ -503,7 +527,6 @@
 
         addHeaderToExcelData(data);
 
-        // Jika hanya ada pesan "Tidak ada data"
         if (rows.length === 1 && rows[0].innerText.includes("Tidak ada data")) {
           alert("Tidak ada data untuk diekspor pada bulan ini.");
           return;
@@ -554,7 +577,6 @@
         const ruleStartDate = new Date(2025, 0, 1);
 
         for (let month = 0; month < 12; month++) {
-          // Hentikan proses bulan jika bulan awal sudah melewati batas akhir report
           if (new Date(year, month, 1) > reportEndDate) {
             break;
           }
@@ -564,7 +586,6 @@
           for (let day = 1; day <= daysInMonth; day++) {
             const currentDate = new Date(year, month, day);
 
-            // Hentikan proses hari jika melewati 3 Maret 2026
             if (currentDate > reportEndDate) {
               break;
             }
@@ -616,9 +637,8 @@
       }
 
       window.onload = function () {
-        // Set default ke Maret 2026 saat halaman diakses agar sesuai batas akhir
         document.getElementById("yearFilter").value = "2026";
-        document.getElementById("monthFilter").value = "2"; // Maret
+        document.getElementById("monthFilter").value = "2";
         generateReport();
       };
     </script>
