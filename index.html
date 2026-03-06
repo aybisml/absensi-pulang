@@ -326,7 +326,7 @@
           Export Bulan Ini
         </button>
         <button class="btn-excel-all" onclick="exportAllToExcel()">
-          Export 1 Tahun
+          Export ALL
         </button>
       </div>
 
@@ -398,14 +398,13 @@
 
       function addHeaderToExcelData(data) {
         const nama = document.getElementById("infoNama").innerText;
-        const nik = document.getElementById("infoNik").innerText;
-        const dept = document.getElementById("infoDept").innerText;
+        // MENGAMBIL DATA EMAIL (Menggantikan NIK dan Dept yang sudah Anda hapus)
+        const email = document.getElementById("infoEmail").innerText;
 
         data.push(["LAPORAN EVALUASI ABSENSI PULANG"]);
-        data.push(["Nama Karyawan", ": " + nama]);
-        data.push(["NIK / ID", ": " + nik]);
-        data.push(["Departemen", ": " + dept]);
-        data.push([]);
+        data.push(["Nama Lengkap", ": " + nama]);
+        data.push(["Email", ": " + email]);
+        data.push([]); // Baris jarak kosong
 
         data.push([
           "DISCLAIMER PENTING: Sejak 1 Januari 2025, data pada report ini dikhususkan secara eksklusif untuk evaluasi log absensi pulang.",
@@ -421,18 +420,19 @@
           "3. Libur Internal dari pemindahan hari libur nasional ke libur internal.",
         ]);
         data.push(["4. Dan libur-libur lainnya."]);
-        data.push([]);
+        data.push([]); // Baris jarak sebelum tabel
       }
 
       function configureWorksheet(worksheet) {
+        // BARIS MERGE DISESUAIKAN (Karena NIK dan Dept hilang, urutan baris disclaimer naik 1 tingkat)
         worksheet["!merges"] = [
-          { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } },
+          { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }, // Judul
+          { s: { r: 4, c: 0 }, e: { r: 4, c: 3 } }, // Disclaimer text
           { s: { r: 5, c: 0 }, e: { r: 5, c: 3 } },
           { s: { r: 6, c: 0 }, e: { r: 6, c: 3 } },
           { s: { r: 7, c: 0 }, e: { r: 7, c: 3 } },
           { s: { r: 8, c: 0 }, e: { r: 8, c: 3 } },
           { s: { r: 9, c: 0 }, e: { r: 9, c: 3 } },
-          { s: { r: 10, c: 0 }, e: { r: 10, c: 3 } },
         ];
 
         worksheet["!cols"] = [
@@ -641,4 +641,3 @@
     </script>
   </body>
 </html>
-#tes
