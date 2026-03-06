@@ -219,7 +219,7 @@
 
         /* ATURAN PEMOTONGAN HALAMAN TABEL */
         table {
-          page-break-before: always; /* Memaksa SELURUH tabel untuk selalu dimulai di halaman baru */
+          page-break-before: always;
           page-break-inside: auto;
           border-collapse: collapse;
         }
@@ -354,14 +354,6 @@
         "Sabtu",
       ];
 
-      const tanggalLiburKhusus = [
-        "2025-01-01",
-        "2025-03-31",
-        "2025-04-01",
-        "2026-01-01",
-        "2026-02-14",
-      ];
-
       const fullReasonHTML = `
         <div class="reason-content">
             <ol>
@@ -398,13 +390,12 @@
 
       function addHeaderToExcelData(data) {
         const nama = document.getElementById("infoNama").innerText;
-        // MENGAMBIL DATA EMAIL (Menggantikan NIK dan Dept yang sudah Anda hapus)
         const email = document.getElementById("infoEmail").innerText;
 
         data.push(["LAPORAN EVALUASI ABSENSI PULANG"]);
         data.push(["Nama Lengkap", ": " + nama]);
         data.push(["Email", ": " + email]);
-        data.push([]); // Baris jarak kosong
+        data.push([]);
 
         data.push([
           "DISCLAIMER PENTING: Sejak 1 Januari 2025, data pada report ini dikhususkan secara eksklusif untuk evaluasi log absensi pulang.",
@@ -420,14 +411,13 @@
           "3. Libur Internal dari pemindahan hari libur nasional ke libur internal.",
         ]);
         data.push(["4. Dan libur-libur lainnya."]);
-        data.push([]); // Baris jarak sebelum tabel
+        data.push([]);
       }
 
       function configureWorksheet(worksheet) {
-        // BARIS MERGE DISESUAIKAN (Karena NIK dan Dept hilang, urutan baris disclaimer naik 1 tingkat)
         worksheet["!merges"] = [
-          { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }, // Judul
-          { s: { r: 4, c: 0 }, e: { r: 4, c: 3 } }, // Disclaimer text
+          { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } },
+          { s: { r: 4, c: 0 }, e: { r: 4, c: 3 } },
           { s: { r: 5, c: 0 }, e: { r: 5, c: 3 } },
           { s: { r: 6, c: 0 }, e: { r: 6, c: 3 } },
           { s: { r: 7, c: 0 }, e: { r: 7, c: 3 } },
@@ -465,24 +455,18 @@
           const dayOfWeek = currentDate.getDay();
           const stringHari = namaHari[dayOfWeek];
 
-          const dateString = `${year}-${(selectedMonth + 1).toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
-          const isCustomHoliday = tanggalLiburKhusus.includes(dateString);
-
           const formattedDate = `${stringHari}, ${day.toString().padStart(2, "0")}-${(selectedMonth + 1).toString().padStart(2, "0")}-${year}`;
 
           const tr = document.createElement("tr");
 
-          if (dayOfWeek === 0 || isCustomHoliday) {
+          // HANYA HARI MINGGU SAJA YANG DIKECUALIKAN
+          if (dayOfWeek === 0) {
             tr.className = "holiday-row";
-            const keteranganLibur =
-              dayOfWeek === 0
-                ? "Hari Libur Mingguan"
-                : "Libur Nasional / Internal (Sesuai Disclaimer)";
             tr.innerHTML = `
                     <td><strong>${formattedDate}</strong></td>
                     <td>-</td>
                     <td><span class="status-badge badge-holiday">Libur</span></td>
-                    <td><em>${keteranganLibur}</em></td>
+                    <td><em>Hari Libur Mingguan</em></td>
                 `;
           } else {
             const isPagi = (day + selectedMonth) % 2 === 0;
@@ -589,17 +573,12 @@
 
             const dayOfWeek = currentDate.getDay();
             const stringHari = namaHari[dayOfWeek];
-            const dateString = `${year}-${(month + 1).toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
-            const isCustomHoliday = tanggalLiburKhusus.includes(dateString);
 
             const formattedDate = `${stringHari}, ${day.toString().padStart(2, "0")}-${(month + 1).toString().padStart(2, "0")}-${year}`;
 
-            if (dayOfWeek === 0 || isCustomHoliday) {
-              const keteranganLibur =
-                dayOfWeek === 0
-                  ? "Hari Libur Mingguan"
-                  : "Libur Nasional / Internal";
-              data.push([formattedDate, "-", "Libur", keteranganLibur]);
+            // HANYA HARI MINGGU SAJA YANG DIKECUALIKAN
+            if (dayOfWeek === 0) {
+              data.push([formattedDate, "-", "Libur", "Hari Libur Mingguan"]);
             } else {
               const isPagi = (day + month) % 2 === 0;
               const shift = isPagi ? "Pagi" : "Siang";
