@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Report Absensi Pulang</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+      :root {
+        --primary-color: #2c3e50;
+        --excel-color: #27ae60;
+        --excel-all-color: #1e8449;
+        --print-color: #5d6d7e;
+        --bg-color: #f8f9fa;
+        --border-color: #dee2e6;
+        --danger-color: #c92a2a;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: var(--bg-color);
+        color: #333;
+        margin: 0;
+        padding: 20px;
+      }
+      .container {
+        max-width: 1150px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      h2 {
+        color: var(--primary-color);
+        border-bottom: 2px solid var(--primary-color);
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      /* Bagian Identitas Statis */
+      .identity-static {
+        margin-bottom: 20px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border: 1px solid var(--border-color);
+        border-left: 4px solid var(--primary-color);
+        border-radius: 6px;
+      }
+      .identity-static p {
+        margin: 5px 0;
+        font-size: 14px;
+      }
+      .identity-static p strong {
+        display: inline-block;
+        width: 150px;
+        color: var(--primary-color);
+      }
+
+      .controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        align-items: center;
+        flex-wrap: wrap;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--border-color);
+      }
+      select,
+      button {
+        padding: 8px 15px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      .btn-primary:hover {
+        background-color: #1a252f;
+      }
+      .btn-excel {
+        background-color: var(--excel-color);
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      .btn-excel:hover {
+        background-color: #219653;
+      }
+      .btn-excel-all {
+        background-color: var(--excel-all-color);
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      .btn-excel-all:hover {
+        background-color: #145a32;
+      }
+      .btn-print {
+        background-color: var(--print-color);
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      .btn-print:hover {
+        background-color: #34495e;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        font-size: 13px;
+      }
+      th,
+      td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: top;
+        line-height: 1.5;
+      }
+      th {
+        background-color: var(--primary-color);
+        color: white;
+        font-weight: 600;
+      }
+      tr:hover {
+        background-color: #f1f3f5;
+      }
+      tr.holiday-row {
+        background-color: #f8f9fa;
+        color: #6c757d;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+        white-space: nowrap;
+      }
+      .badge-error {
+        background-color: #ffe3e3;
+        color: var(--danger-color);
+      }
+      .badge-holiday {
+        background-color: #e9ecef;
+        color: #495057;
+      }
+
+      .summary-box {
+        background-color: #e9ecef;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      .disclaimer-text {
+        color: var(--danger-color);
+        margin-top: 15px;
+        display: block;
+        padding-top: 15px;
+        border-top: 1px dashed #ccc;
+      }
+      .disclaimer-text ul {
+        margin-top: 5px;
+        margin-bottom: 0;
+        padding-left: 20px;
+      }
+      .reason-content ol,
+      .reason-content ul {
+        margin-top: 5px;
+        margin-bottom: 10px;
+        padding-left: 20px;
+      }
+      .reason-content p {
+        margin: 5px 0;
+      }
+
+      /* --- CSS KHUSUS UNTUK PRINT (PDF/KERTAS) --- */
+      @media print {
+        body {
+          background-color: white;
+          padding: 0;
+        }
+        .container {
+          box-shadow: none;
+          padding: 0;
+          max-width: 100%;
+        }
+        .no-print,
+        .controls {
+          display: none !important;
+        }
+        .identity-static {
+          border: none;
+          border-bottom: 2px solid #000;
+          padding: 0 0 10px 0;
+          margin-bottom: 15px;
+          background-color: transparent;
+        }
+        th {
+          background-color: #eee !important;
+          color: #000 !important;
+          border: 1px solid #ccc;
+        }
+        td {
+          border: 1px solid #ccc;
+        }
+        .status-badge {
+          border: 1px solid #ccc;
+        }
+        .badge-error {
+          background-color: transparent !important;
+          color: #000;
+          border: 1px solid #000;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Laporan Evaluasi Absensi Pulang</h2>
+
+      <div class="identity-static">
+        <p>
+          <strong>Nama Lengkap</strong> : <span id="infoNama">[Nama Anda]</span>
+        </p>
+        <p>
+          <strong>NIK / ID Karyawan</strong> :
+          <span id="infoNik">[NIK Anda]</span>
+        </p>
+        <p>
+          <strong>Departemen / Divisi</strong> :
+          <span id="infoDept">[Departemen Anda]</span>
+        </p>
+      </div>
+
+      <div class="summary-box">
+        <strong>Catatan Sistem:</strong> Mulai <b>1 Januari 2025</b> hingga
+        batas akhir data pada <b>3 Maret 2026</b>, data absensi untuk
+        <b>Shift Pagi</b> dan <b>Shift Siang</b> secara default diatur menjadi
+        <i>"Tidak Absen Pulang"</i> dengan melampirkan konteks kendala lapangan.
+        Setiap hari <b>Minggu</b> ditetapkan sebagai hari Libur.
+
+        <div class="disclaimer-text">
+          <b>DISCLAIMER PENTING:</b> Sejak 1 Januari 2025, data pada report ini
+          dikhususkan secara eksklusif untuk evaluasi log absensi pulang. Data
+          dalam tabel ini <b>TIDAK TERMASUK / TIDAK MEMPERHITUNGKAN</b>:
+          <ul>
+            <li>Riwayat ketidakhadiran (mangkir) ataupun izin/cuti saya.</li>
+            <li>Hari Libur Nasional.</li>
+            <li>
+              Libur Internal dari pemindahan hari libur nasional ke libur
+              internal (biasanya libur nasional dipindah pada libur hari
+              terjepit pada hari Sabtu jika Jumat libur).
+            </li>
+            <li>Dan libur-libur lainnya.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="controls">
+        <label for="yearFilter">Tahun:</label>
+        <select id="yearFilter">
+          <option value="2025">2025</option>
+          <option value="2026" selected>2026</option>
+        </select>
+
+        <label for="monthFilter">Bulan:</label>
+        <select id="monthFilter">
+          <option value="0">Januari</option>
+          <option value="1">Februari</option>
+          <option value="2" selected>Maret</option>
+          <option value="3">April</option>
+          <option value="4">Mei</option>
+          <option value="5">Juni</option>
+          <option value="6">Juli</option>
+          <option value="7">Agustus</option>
+          <option value="8">September</option>
+          <option value="9">Oktober</option>
+          <option value="10">November</option>
+          <option value="11">Desember</option>
+        </select>
+        <button class="btn-primary" onclick="generateReport()">
+          Tampilkan Data
+        </button>
+        <button class="btn-print" onclick="window.print()">
+          Cetak / Simpan PDF
+        </button>
+        <button class="btn-excel" onclick="exportToExcel()">
+          Export Bulan Ini
+        </button>
+        <button class="btn-excel-all" onclick="exportAllToExcel()">
+          Export 1 Tahun
+        </button>
+      </div>
+
+      <table id="tabelAbsensi">
+        <thead>
+          <tr>
+            <th width="15%">Hari & Tanggal</th>
+            <th width="10%">Shift</th>
+            <th width="15%">Status Absensi</th>
+            <th>Alasan Detail (Konteks Lapangan)</th>
+          </tr>
+        </thead>
+        <tbody id="reportData"></tbody>
+      </table>
+    </div>
+
+    <script>
+      const namaHari = [
+        "Minggu",
+        "Senin",
+        "Selasa",
+        "Rabu",
+        "Kamis",
+        "Jumat",
+        "Sabtu",
+      ];
+
+      // DAFTAR TANGGAL MERAH / LIBUR INTERNAL (Format: YYYY-MM-DD)
+      const tanggalLiburKhusus = [
+        "2025-01-01",
+        "2025-03-31",
+        "2025-04-01",
+        "2026-01-01",
+        "2026-02-14",
+      ];
+
+      const fullReasonHTML = `
+        <div class="reason-content">
+            <ol>
+                <li>Sistem absensi sering lambat atau sulit diakses saat jam pulang.</li>
+                <li>Beberapa kali pekerjaan selesai melebihi jam kerja sampai monitor absensi mati.</li>
+                <li>Pemahaman umum absensi masuk menjadi prioritas pencatatan kehadiran.</li>
+                <li>Periode sebelumnya belum diberlakukan denda untuk absensi pulang.</li>
+                <li>Sehingga terbentuk kebiasaan bahwa yang terpenting adalah absensi masuk, dan absensi pulang sering tidak dilakukan meskipun pekerjaan tetap diselesaikan sampai akhir shift.</li>
+            </ol>
+            <p><strong>Dampaknya:</strong> Pada beberapa kesempatan absensi pulang banyak yang tidak dilakukan meskipun pekerjaan tetap diselesaikan sampai akhir shift.</p>
+            <p><strong>Timbul kebiasaan buruk:</strong></p>
+            <ul>
+                <li>Lupa absen</li>
+                <li>Malas absen</li>
+                <li>Lupa dan malas absen</li>
+            </ul>
+        </div>
+    `;
+
+      const plainTextReason =
+        "1. Sistem absensi sering lambat atau sulit diakses saat jam pulang.\n2. Beberapa kali pekerjaan selesai melebihi jam kerja sampai monitor absensi mati.\n3. Pemahaman umum absensi masuk menjadi prioritas pencatatan kehadiran.\n4. Periode sebelumnya belum diberlakukan denda untuk absensi pulang.\n5. Sehingga terbentuk kebiasaan bahwa yang terpenting adalah absensi masuk, dan absensi pulang sering tidak dilakukan meskipun pekerjaan tetap diselesaikan sampai akhir shift.\n\nDampaknya: Pada beberapa kesempatan absensi pulang banyak yang tidak dilakukan meskipun pekerjaan tetap diselesaikan sampai akhir shift.\n\nTimbul kebiasaan buruk:\n- Lupa absen\n- Malas absen\n- Lupa dan malas absen";
+
+      // BATAS AKHIR REPORT (3 Maret 2026)
+      const reportEndDate = new Date(2026, 2, 3); // Bulan 2 adalah Maret (karena array bulan dimulai dari 0)
+
+      function checkExcelLibrary() {
+        if (typeof XLSX === "undefined") {
+          alert(
+            "⚠️ Fitur Export Excel gagal dimuat!\n\nHarap periksa koneksi internet Anda, lalu muat ulang halaman ini.",
+          );
+          return false;
+        }
+        return true;
+      }
+
+      function addHeaderToExcelData(data) {
+        const nama = document.getElementById("infoNama").innerText;
+        const nik = document.getElementById("infoNik").innerText;
+        const dept = document.getElementById("infoDept").innerText;
+
+        data.push(["LAPORAN EVALUASI ABSENSI PULANG"]);
+        data.push(["Nama Karyawan", ": " + nama]);
+        data.push(["NIK / ID", ": " + nik]);
+        data.push(["Departemen", ": " + dept]);
+        data.push([]);
+
+        data.push([
+          "DISCLAIMER PENTING: Sejak 1 Januari 2025, data pada report ini dikhususkan secara eksklusif untuk evaluasi log absensi pulang.",
+        ]);
+        data.push([
+          "Data dalam tabel ini TIDAK TERMASUK / TIDAK MEMPERHITUNGKAN:",
+        ]);
+        data.push([
+          "1. Riwayat ketidakhadiran (mangkir) ataupun izin/cuti saya.",
+        ]);
+        data.push(["2. Hari Libur Nasional."]);
+        data.push([
+          "3. Libur Internal dari pemindahan hari libur nasional ke libur internal (contoh: libur nasional dipindah pada libur hari terjepit pada hari Sabtu jika Jumat libur).",
+        ]);
+        data.push(["4. Dan libur-libur lainnya."]);
+        data.push([]);
+      }
+
+      function configureWorksheet(worksheet) {
+        worksheet["!merges"] = [
+          { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } },
+          { s: { r: 5, c: 0 }, e: { r: 5, c: 3 } },
+          { s: { r: 6, c: 0 }, e: { r: 6, c: 3 } },
+          { s: { r: 7, c: 0 }, e: { r: 7, c: 3 } },
+          { s: { r: 8, c: 0 }, e: { r: 8, c: 3 } },
+          { s: { r: 9, c: 0 }, e: { r: 9, c: 3 } },
+          { s: { r: 10, c: 0 }, e: { r: 10, c: 3 } },
+        ];
+
+        worksheet["!cols"] = [
+          { wch: 22 },
+          { wch: 12 },
+          { wch: 20 },
+          { wch: 100 },
+        ];
+      }
+
+      function generateReport() {
+        const tbody = document.getElementById("reportData");
+        tbody.innerHTML = "";
+
+        const year = parseInt(document.getElementById("yearFilter").value);
+        const selectedMonth = parseInt(
+          document.getElementById("monthFilter").value,
+        );
+
+        const daysInMonth = new Date(year, selectedMonth + 1, 0).getDate();
+        const ruleStartDate = new Date(2025, 0, 1);
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const currentDate = new Date(year, selectedMonth, day);
+
+          // HENTIKAN JIKA TANGGAL MELEBIHI 3 MARET 2026
+          if (currentDate > reportEndDate) {
+            break;
+          }
+
+          const dayOfWeek = currentDate.getDay();
+          const stringHari = namaHari[dayOfWeek];
+
+          const dateString = `${year}-${(selectedMonth + 1).toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
+          const isCustomHoliday = tanggalLiburKhusus.includes(dateString);
+
+          const formattedDate = `${stringHari}, ${day.toString().padStart(2, "0")}-${(selectedMonth + 1).toString().padStart(2, "0")}-${year}`;
+
+          const tr = document.createElement("tr");
+
+          if (dayOfWeek === 0 || isCustomHoliday) {
+            tr.className = "holiday-row";
+            const keteranganLibur =
+              dayOfWeek === 0
+                ? "Hari Libur Mingguan"
+                : "Libur Nasional / Internal (Sesuai Disclaimer)";
+            tr.innerHTML = `
+                    <td><strong>${formattedDate}</strong></td>
+                    <td>-</td>
+                    <td><span class="status-badge badge-holiday">Libur</span></td>
+                    <td><em>${keteranganLibur}</em></td>
+                `;
+          } else {
+            const isPagi = (day + selectedMonth) % 2 === 0;
+            const shift = isPagi ? "Pagi" : "Siang";
+
+            let statusBadge = "Hadir Sempurna";
+            let reason = "-";
+
+            if (
+              currentDate >= ruleStartDate &&
+              (shift === "Pagi" || shift === "Siang")
+            ) {
+              statusBadge = `<span class="status-badge badge-error">Tidak Absen Pulang</span>`;
+              reason = fullReasonHTML;
+            }
+
+            tr.innerHTML = `
+                    <td>${formattedDate}</td>
+                    <td>Shift ${shift}</td>
+                    <td>${statusBadge}</td>
+                    <td>${reason}</td>
+                `;
+          }
+
+          tbody.appendChild(tr);
+        }
+
+        if (tbody.innerHTML === "") {
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #666; padding: 20px;"><em>Tidak ada data. Report telah berakhir pada tanggal 3 Maret 2026.</em></td></tr>`;
+        }
+      }
+
+      function exportToExcel() {
+        if (!checkExcelLibrary()) return;
+
+        const table = document.getElementById("tabelAbsensi");
+        const rows = table.querySelectorAll("tr");
+        const data = [];
+
+        addHeaderToExcelData(data);
+
+        // Jika hanya ada pesan "Tidak ada data"
+        if (rows.length === 1 && rows[0].innerText.includes("Tidak ada data")) {
+          alert("Tidak ada data untuk diekspor pada bulan ini.");
+          return;
+        }
+
+        rows.forEach((row) => {
+          const rowData = [];
+          const cells = row.querySelectorAll("th, td");
+          cells.forEach((cell) => rowData.push(cell.innerText.trim()));
+          data.push(rowData);
+        });
+
+        const worksheet = XLSX.utils.aoa_to_sheet(data);
+        configureWorksheet(worksheet);
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Report Absensi");
+
+        const monthName =
+          document.getElementById("monthFilter").options[
+            document.getElementById("monthFilter").selectedIndex
+          ].text;
+        const year = document.getElementById("yearFilter").value;
+        const nama = document
+          .getElementById("infoNama")
+          .innerText.replace(/ /g, "_");
+
+        XLSX.writeFile(
+          workbook,
+          `Report_Absensi_${nama}_${monthName}_${year}.xlsx`,
+        );
+      }
+
+      function exportAllToExcel() {
+        if (!checkExcelLibrary()) return;
+
+        const data = [];
+        addHeaderToExcelData(data);
+
+        data.push([
+          "Hari & Tanggal",
+          "Shift",
+          "Status Absensi",
+          "Alasan Detail (Konteks Lapangan)",
+        ]);
+
+        const year = parseInt(document.getElementById("yearFilter").value);
+        const ruleStartDate = new Date(2025, 0, 1);
+
+        for (let month = 0; month < 12; month++) {
+          // Hentikan proses bulan jika bulan awal sudah melewati batas akhir report
+          if (new Date(year, month, 1) > reportEndDate) {
+            break;
+          }
+
+          const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+          for (let day = 1; day <= daysInMonth; day++) {
+            const currentDate = new Date(year, month, day);
+
+            // Hentikan proses hari jika melewati 3 Maret 2026
+            if (currentDate > reportEndDate) {
+              break;
+            }
+
+            const dayOfWeek = currentDate.getDay();
+            const stringHari = namaHari[dayOfWeek];
+            const dateString = `${year}-${(month + 1).toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
+            const isCustomHoliday = tanggalLiburKhusus.includes(dateString);
+
+            const formattedDate = `${stringHari}, ${day.toString().padStart(2, "0")}-${(month + 1).toString().padStart(2, "0")}-${year}`;
+
+            if (dayOfWeek === 0 || isCustomHoliday) {
+              const keteranganLibur =
+                dayOfWeek === 0
+                  ? "Hari Libur Mingguan"
+                  : "Libur Nasional / Internal";
+              data.push([formattedDate, "-", "Libur", keteranganLibur]);
+            } else {
+              const isPagi = (day + month) % 2 === 0;
+              const shift = isPagi ? "Pagi" : "Siang";
+              let status = "Hadir Sempurna";
+              let reason = "-";
+
+              if (
+                currentDate >= ruleStartDate &&
+                (shift === "Pagi" || shift === "Siang")
+              ) {
+                status = "Tidak Absen Pulang";
+                reason = plainTextReason;
+              }
+              data.push([formattedDate, `Shift ${shift}`, status, reason]);
+            }
+          }
+        }
+
+        const worksheet = XLSX.utils.aoa_to_sheet(data);
+        configureWorksheet(worksheet);
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, `Data ${year}`);
+
+        const nama = document
+          .getElementById("infoNama")
+          .innerText.replace(/ /g, "_");
+        XLSX.writeFile(
+          workbook,
+          `Report_FULL_Absensi_${nama}_Tahun_${year}.xlsx`,
+        );
+      }
+
+      window.onload = function () {
+        // Set default ke Maret 2026 saat halaman diakses agar sesuai batas akhir
+        document.getElementById("yearFilter").value = "2026";
+        document.getElementById("monthFilter").value = "2"; // Maret
+        generateReport();
+      };
+    </script>
+  </body>
+</html>
